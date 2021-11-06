@@ -1,0 +1,13 @@
+---
+apiVersion: homelab.valdron.ca/v1
+kind: Network
+metadata:
+  name: devices
+spec:
+  role: Devices
+
+  vlan: 2030
+  cidrBlock: 10.1.30.0/24
+
+  serveDhcp: true
+  router: 10.1.30.1

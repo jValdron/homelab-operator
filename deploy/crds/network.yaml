@@ -1,0 +1,39 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: networks.homelab.valdron.ca
+spec:
+  group: homelab.valdron.ca
+  scope: Namespaced
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          properties:
+            spec:
+              properties:
+                role:
+                  type: string
+                vlan:
+                  type: number
+                cidrBlock:
+                  type: string
+                serveDhcp:
+                  type: boolean
+                router:
+                  type: string
+              required:
+                - vlan
+                - cidrBlock
+                - serveDhcp
+              type: object
+          type: object
+  names:
+    singular: network
+    plural: networks
+    kind: Network
+    shortNames:
+      - net

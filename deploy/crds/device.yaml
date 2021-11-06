@@ -1,0 +1,63 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: devices.homelab.valdron.ca
+spec:
+  group: homelab.valdron.ca
+  scope: Namespaced
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          properties:
+            spec:
+              properties:
+                network:
+                  type: string
+                ip:
+                  type: string
+                macAddresses:
+                  type: array
+                  items:
+                    type: string
+                dhcp:
+                  type: boolean
+                  
+                trunked:
+                  type: boolean
+                wired:
+                  type: boolean
+                wireless:
+                  type: boolean
+                usb:
+                  type: boolean
+
+                location:
+                  type: string
+                position:
+                  type: number
+                pdu:
+                  type: string
+                switch:
+                  type: string
+                side:
+                  type: string
+                  enum: [Front, Back]
+
+                manufacturer:
+                  type: string
+                model:
+                  type: string
+                serialNumber:
+                  type: string
+              type: object
+          type: object
+  names:
+    singular: device
+    plural: devices
+    kind: Device
+    shortNames:
+      - dev
