@@ -40,8 +40,8 @@ export default class DeviceBasedHosts extends Operator {
 
     this.crds = {
       device: await this.registerCustomResourceDefinition(Path.resolve(crdsBasePath, 'device.yaml')),
-      dnsHost: await this.registerCustomResourceDefinition(Path.resolve(crdsBasePath, 'dnsmasq', 'dns-hosts.yaml')),
-      dhcpHost: await this.registerCustomResourceDefinition(Path.resolve(crdsBasePath, 'dnsmasq', 'dhcp-hosts.yaml')),
+      dnsHosts: await this.registerCustomResourceDefinition(Path.resolve(crdsBasePath, 'dnsmasq', 'dns-hosts.yaml')),
+      dhcpHosts: await this.registerCustomResourceDefinition(Path.resolve(crdsBasePath, 'dnsmasq', 'dhcp-hosts.yaml')),
       dhcpOptions: await this.registerCustomResourceDefinition(Path.resolve(crdsBasePath, 'dnsmasq', 'dhcp-options.yaml')),
       network: await this.registerCustomResourceDefinition(Path.resolve(crdsBasePath, 'network.yaml'))
     };
@@ -210,7 +210,7 @@ export default class DeviceBasedHosts extends Operator {
               logger.debug({
                 dnsHosts: dnsHosts,
                 response: response
-              }, 'Successfully updated DnsHosts custom resource');e
+              }, 'Successfully updated DnsHosts custom resource');
             }).catch((err) => {
               logger.error({
                 dnsHosts: dnsHosts,
