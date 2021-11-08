@@ -24,11 +24,11 @@ jobs:
         run: echo ::set-output name=tag::$(echo ${GITHUB_REF:10})
         
       - name: Build the tagged Docker image
-        run: docker build . --file Dockerfile --tag $REGISRY:${{steps.vars.outputs.tag}}
+        run: docker build . --file Dockerfile --tag $REGISTRY:${{steps.vars.outputs.tag}}
       - name: Push the tagged Docker image
-        run: docker push $REGISRY:${{steps.vars.outputs.tag}}
+        run: docker push $REGISTRY:${{steps.vars.outputs.tag}}
       
       - name: Build the latest Docker image
-        run: docker build . --file Dockerfile --tag $REGISRY:latest
+        run: docker build . --file Dockerfile --tag $REGISTRY:latest
       - name: Push the latest Docker image
-        run: docker push $REGISRY:latest
+        run: docker push $REGISTRY:latest
