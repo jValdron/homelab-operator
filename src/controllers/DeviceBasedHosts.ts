@@ -71,8 +71,7 @@ export default class DeviceBasedHosts extends Operator {
     this.currentReconciliation = new Promise((resolve, reject) => {
       this.reconciliateNetworks(namespace).then((networks) => {
         this.reconciliateDevices(namespace, networks).then(() => {
-        
-          // TODO null current recon
+          this.currentReconciliation = null;
           return resolve();
         }).catch(reject);
       }).catch(reject);
