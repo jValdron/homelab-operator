@@ -81,4 +81,7 @@ spec:
 ```
 
 ## TODO
+* Not watching devices properly (not reconciliating?)
+* Document controllers
 * `ownerRef` implementation to reconcile when owned resources are modified
+* Add leader election
