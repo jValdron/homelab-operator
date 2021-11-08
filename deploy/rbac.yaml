@@ -54,7 +54,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: homelab-operator
-    namespace: default
+    namespace: homelab-operator
 roleRef:
   kind: ClusterRole
   name: homelab-operator
