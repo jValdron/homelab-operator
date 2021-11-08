@@ -3,25 +3,62 @@ Provides a way to track devices and networks within a homelab as Kubernetes reso
 
 Automatically uses devices, ingresses and services (LoadBalancers) to create DNS and DHCP resources to be used by [dnsmasq-controller](https://github.com/kvaps/dnsmasq-controller).
 
-Complete setup provides DHCP, DNS and RADIUS authentication to homelab.
+Complete setup provides DHCP, DNS and RADIUS authentication (planned) to homelab.
+
+## Notice
+This comes as-is, with no support or no warranties.
+
+## Background
+I was tired of managing my deviecs through an Excel spreadsheet, just to have my various configuration being managed separately, and end up with drifts. After experimenting with [dnsmasq-controller](https://github.com/kvaps/dnsmasq-controller), and needed RADIUS authentication configured for my devices too, I figured why not build a small operator to create the configuration I need and a way to track everything through code/custom resources.
 
 ## Options
 Available options via environment variables (or dotenv):
 * `LOG_LEVEL`: Optional, overrides the log level: ['trace', 'debug', 'info', 'warn', 'error']
+* `DRY_RUN`: Whether or not to enable dry run mode, won't create any `dnsmasq` related resources.
+
 * `DNSMASQ_RESOURCES_NAMESPACE`: Namespace to create the dnsmasq resources within
+* `DNSMASQ_DOMAIN_NAME`: Adds a `domain-name` option under the created `DhcpOptions` resources.
+* `DNSMASQ_DOMAIN_SEARCH`: Adds a `domain-seach` option under the created `DhcpOptions` resources, with one or more values.
+
+* `ENABLE_DEVICE_BASED_HOSTS`: Whether or not to enable the _Devies based hosts_ controller (see Controllers).
+* `ENABLE_DEVICE_SHORT_NAME`: Whether to enable the short name form of hostnames on the generated `DnsHosts` resources. Short name is simply the name of the device.
+* `DEVICE_SUFFIX`: Optional, if provided, creates another hostname under `DnsHosts` resources using the device name and appending the given suffix.
+
 * `ENABLE_INGRESS_BASED_DNS_HOSTS`: Whether or not to enable the _Ingress based DNS hosts_ controller (see Controllers).
+
 * `ENABLE_LOAD_BALANCER_BASED_DNS_HOSTS`: Whether or not to enable the _Load balancer based DNS hosts_ controller (see Controllers).
 * `LOAD_BALANCER_BASED_SUFFIX`: Optionally, a suffix to add to the DNS hosts created as part of the load balancer based DNS hosts.
 
 ## Controllers
-### Ingress based DNS hosts
+### Devices based hosts
 TODO
+
+### Ingress based DNS hosts
+The Ingress based DNS hosts watches over all ingresses across all namespaces and adds a DNS host resource for their respective hostnames.
+
+The generated resource will end up being: `dnshosts/ingress-based`
+
+You must first create an `IngressRouter` resource for the ingress classes you wish to create host entries for:
+```
+apiVersion: homelab.valdron.ca/v1
+kind: IngressRouter
+metadata:
+  name: internal
+spec:
+  ingressClass: internal
+  canonicalName: router-internal.valdron.ca
+```
+
+This will create a host entry, under the `dnshosts/ingress-based` resource, for each ingresses with the `internal` ingress class.
 
 ### Load balancer based DNS hosts
-TODO
+Similar to the inress based DNS hosts but with with services with the `LoadBalancer` type.
 
-### Devices
-TODO
+The Ingress based DNS hosts watches over all services across all namespaces, with the `LoadBalancer` type, and adds a DNS host resource for their respective hostnames.
+
+The generated resource will end up being: `dnshosts/load-balancer-based`
+
+Optionally, you can specify `LOAD_BALANCER_BASED_SUFFIX` to add a suffix to all host entries that will be created.
 
 ## Resources
 ### Devices
@@ -36,6 +73,10 @@ spec:
   macAddresses:
     - 48:4d:7e:de:19:8f
   dhcp: true
+
+  additionalHostnames:
+    - jason-pc0
+    - my-other-hostname
 
   trunked: false
   wired: true
@@ -81,6 +122,6 @@ spec:
 ```
 
 ## TODO
-* Document controllers
+* Add FreeRADIUS integration
 * `ownerRef` implementation to reconcile when owned resources are modified
 * Add leader election
