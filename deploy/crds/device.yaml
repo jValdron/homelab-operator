@@ -25,6 +25,11 @@ spec:
                     type: string
                 dhcp:
                   type: boolean
+
+                additionalHostnames:
+                  type: array
+                  items:
+                    type: string
                   
                 trunked:
                   type: boolean

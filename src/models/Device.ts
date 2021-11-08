@@ -6,6 +6,8 @@ export class DeviceSpec {
   macAddresses?: string[];
   dhcp: boolean = false;
 
+  additionalHostnames?: string[];
+
   trunked: boolean = false;
   wired: boolean = false;
   wireless: boolean = false;

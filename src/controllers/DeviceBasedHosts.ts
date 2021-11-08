@@ -128,16 +128,25 @@ export default class DeviceBasedHosts extends Operator {
                 host.ip = device.spec.ip;
                 host.hostnames = [];
                 
-                if (config.EnableDeviceShortName)
-                {
-                  host.hostnames.push(device.metadata.name);
+                const addHostnames = hostname => {
+                  if (config.EnableDeviceShortName)
+                  {
+                    host.hostnames.push(hostname);
+                  }
+  
+                  if (config.DeviceSuffix)
+                  {
+                    host.hostnames.push(`${hostname}${config.DeviceSuffix}`);
+                  }
                 }
 
-                if (config.DeviceSuffix)
-                {
-                  host.hostnames.push(`${device.metadata.name}${config.DeviceSuffix}`);
-                }
+                addHostnames(device.metadata.name);
 
+                if (device.spec.additionalHostnames)
+                {
+                  device.spec.additionalHostnames.forEach(addHostnames);
+                }
+                
                 dnsHosts[network].spec.hosts.push(host);
               }
               else
