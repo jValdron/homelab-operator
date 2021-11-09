@@ -9,7 +9,7 @@ Complete setup provides DHCP, DNS and RADIUS authentication (planned) to homelab
 This comes as-is, with no support or no warranties.
 
 ## Background
-I was tired of managing my deviecs through an Excel spreadsheet, just to have my various configuration being managed separately, and end up with drifts. After experimenting with [dnsmasq-controller](https://github.com/kvaps/dnsmasq-controller), and needed RADIUS authentication configured for my devices too, I figured why not build a small operator to create the configuration I need and a way to track everything through code/custom resources.
+I was tired of managing my deviecs through an Excel spreadsheet, just to have my various configuration being managed separately, and end up with drifts. After experimenting with [dnsmasq-controller](https://github.com/kvaps/dnsmasq-controller), and I needed RADIUS authentication configured for my devices too, I figured why not build a small operator to create the configuration I need and a way to track everything through code/custom resources.
 
 ## Options
 Available options via environment variables (or dotenv):
@@ -31,7 +31,37 @@ Available options via environment variables (or dotenv):
 
 ## Controllers
 ### Devices based hosts
-TODO
+The devices based hosts is the main controller which watches over `Devices` and `Networks` resources in order to create matching `DhcpOptions`, `DhcpHosts` and `DnsHosts`.
+
+There will be one `DhcpHosts` and `DnsHosts` resource created per each `Networks` resource you create. Additionally, there will be a single `DhcpOptions` resource created: `dhcpoptions/device-based-hosts`
+
+In order to generate `DhcpOptions` and `DhcpHosts`, you must create a `Networks` resource (with `serveDhcp`):
+```
+apiVersion: homelab.valdron.ca/v1
+kind: Network
+metadata:
+  name: my-devices
+spec:
+  serveDhcp: true
+  router: 10.1.0.1
+```
+_More options are available for `Networks`, see Resources._
+
+This will create a matching `router` option under the `dhcpoptions/device-based-hosts` resource for the given device.
+
+Simply need to create a device resource and a matching section under the given network's `DnsHosts` and `DhcpHosts` resource:
+```
+apiVersion: homelab.valdron.ca/v1
+kind: Device
+metadata:
+  name: my-device
+spec:
+  network: my-devices
+  ip: 10.1.0.4
+  macAddresses:
+    - 48:4d:7e:de:19:8f
+  dhcp: true
+```
 
 ### Ingress based DNS hosts
 The Ingress based DNS hosts watches over all ingresses across all namespaces and adds a DNS host resource for their respective hostnames.
