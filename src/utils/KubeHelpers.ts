@@ -1,7 +1,7 @@
 import * as http from 'http';
 import * as k8s from '@kubernetes/client-node';
 
-import DRY_RUN from '../Config';
+import config from '../Config';
 import { logger } from './Logger';
 
 export class CustomResourceDefinition {
@@ -23,7 +23,7 @@ export class KubeHelpers {
     response?: http.IncomingMessage;
     body?: object;
   }> {
-    if (DRY_RUN)
+    if (config.DryRun)
     {
       logger.warn({
         namespace: namespace,

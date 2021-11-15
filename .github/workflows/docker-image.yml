@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     
     env:
-      REGISTRY: jvaldron/homelab-operator
+      REGISTRY: jvaldron/freeradius-operator
 
     steps:
       - uses: actions/checkout@v1
