@@ -9,6 +9,9 @@ export default {
   EnableDeviceBasedHosts: process.env.ENABLE_DEVICE_BASED_HOSTS ? !(process.env.ENABLE_DEVICE_BASED_HOSTS === 'false' || process.env.ENABLE_DEVICE_BASED_HOSTS === '0') : true,
   EnableDeviceShortName: process.env.ENABLE_DEVICE_SHORT_NAME ? !(process.env.ENABLE_DEVICE_SHORT_NAME === 'false' || process.env.ENABLE_DEVICE_SHORT_NAME === '0') : true,
   DeviceSuffix: process.env.DEVICE_SUFFIX,
+  EnableFreeRadiusDevices: process.env.ENABLE_FREERADIUS_DEVICES ? !(process.env.ENABLE_FREERADIUS_DEVICES === 'false' || process.env.ENABLE_FREERADIUS_DEVICES === '0') : false,
+  FreeRadiusDevicesNamespace: process.env.FREERADIUS_DEVICES_NAMESPACE,
+  FreeRadiusDevicesWirelessOnly: process.env.FREERADIUS_DEVICES_WIRELESS_ONLY ? !(process.env.FREERADIUS_DEVICES_WIRELESS_ONLY === 'false' || process.env.FREERADIUS_DEVICES_WIRELESS_ONLY === '0') : true,
 
   EnableIngressBasedDnsHosts: process.env.ENABLE_INGRESS_BASED_DNS_HOSTS ? !(process.env.ENABLE_INGRESS_BASED_DNS_HOSTS === 'false' || process.env.ENABLE_INGRESS_BASED_DNS_HOSTS === '0') : true,
 

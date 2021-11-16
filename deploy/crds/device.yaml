@@ -23,6 +23,7 @@ spec:
                   type: array
                   items:
                     type: string
+                  minItems: 1
                 dhcp:
                   type: boolean
 

@@ -3,26 +3,28 @@ Provides a way to track devices and networks within a homelab as Kubernetes reso
 
 Automatically uses devices, ingresses and services (LoadBalancers) to create DNS and DHCP resources to be used by [dnsmasq-controller](https://github.com/kvaps/dnsmasq-controller).
 
-Complete setup provides DHCP, DNS and RADIUS authentication (planned) to homelab.
+Complete setup provides DHCP, DNS and RADIUS authentication ([freeradius-operator](https://github.com/jvaldron/freeradius-operator)) to a homelab environment.
 
 ## Notice
 This comes as-is, with no support or no warranties.
 
 ## Background
-I was tired of managing my deviecs through an Excel spreadsheet, just to have my various configuration being managed separately, and end up with drifts. After experimenting with [dnsmasq-controller](https://github.com/kvaps/dnsmasq-controller), and I needed RADIUS authentication configured for my devices too, I figured why not build a small operator to create the configuration I need and a way to track everything through code/custom resources.
+I was tired of managing my devices through an Excel spreadsheet, just to have my various configuration being managed separately, and end up with drifts. After experimenting with [dnsmasq-controller](https://github.com/kvaps/dnsmasq-controller), and I needed RADIUS authentication configured for my devices too, I figured why not build a small operator to create the configuration I need and a way to track everything through code/custom resources.
 
 ## Options
 Available options via environment variables (or dotenv):
 * `LOG_LEVEL`: Optional, overrides the log level: ['trace', 'debug', 'info', 'warn', 'error']
 * `DRY_RUN`: Whether or not to enable dry run mode, won't create any `dnsmasq` related resources.
 
-* `DNSMASQ_RESOURCES_NAMESPACE`: Namespace to create the dnsmasq resources within
+* `DNSMASQ_RESOURCES_NAMESPACE`: Namespace to create the dnsmasq resources within.
 * `DNSMASQ_DOMAIN_NAME`: Adds a `domain-name` option under the created `DhcpOptions` resources.
 * `DNSMASQ_DOMAIN_SEARCH`: Adds a `domain-seach` option under the created `DhcpOptions` resources, with one or more values.
 
 * `ENABLE_DEVICE_BASED_HOSTS`: Whether or not to enable the _Devies based hosts_ controller (see Controllers).
 * `ENABLE_DEVICE_SHORT_NAME`: Whether to enable the short name form of hostnames on the generated `DnsHosts` resources. Short name is simply the name of the device.
 * `DEVICE_SUFFIX`: Optional, if provided, creates another hostname under `DnsHosts` resources using the device name and appending the given suffix.
+* `ENABLE_FREERADIUS_DEVICES`: Whether or not to enable the creation of FreeRADIUS devices.
+* `FREERADIUS_DEVICES_NAMESPACE`: Namespace to create the FreeRADIUS resources within.
 
 * `ENABLE_INGRESS_BASED_DNS_HOSTS`: Whether or not to enable the _Ingress based DNS hosts_ controller (see Controllers).
 
@@ -152,6 +154,6 @@ spec:
 ```
 
 ## TODO
-* Add FreeRADIUS integration
 * `ownerRef` implementation to reconcile when owned resources are modified
+* Cleanup on delete
 * Add leader election

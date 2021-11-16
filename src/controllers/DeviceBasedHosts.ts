@@ -8,6 +8,8 @@ import { logger } from '../utils/Logger';
 import { KubeHelpers } from '../utils/KubeHelpers';
 
 import * as dnsmasq from '../models/Dnsmasq';
+import * as freeRadius from '../models/FreeRadius';
+
 import { Device, DeviceList } from '../models/Device';
 import { Network, NetworkList } from '../models/Network';
 
@@ -43,6 +45,7 @@ export default class DeviceBasedHosts extends Operator {
       dnsHosts: await this.registerCustomResourceDefinition(Path.resolve(crdsBasePath, 'dnsmasq', 'dns-hosts.yaml')),
       dhcpHosts: await this.registerCustomResourceDefinition(Path.resolve(crdsBasePath, 'dnsmasq', 'dhcp-hosts.yaml')),
       dhcpOptions: await this.registerCustomResourceDefinition(Path.resolve(crdsBasePath, 'dnsmasq', 'dhcp-options.yaml')),
+      freeRadiusDevice: await this.registerCustomResourceDefinition(Path.resolve(crdsBasePath, 'freeradius', 'device.yaml')),
       network: await this.registerCustomResourceDefinition(Path.resolve(crdsBasePath, 'network.yaml'))
     };
 
@@ -84,7 +87,8 @@ export default class DeviceBasedHosts extends Operator {
     logger.debug({}, 'Reconciliating devices; will create DhcpHosts and DnsHosts based off devices and networks');
 
     const dnsHosts: { [key: string]: dnsmasq.DnsHosts } = {},
-          dhcpHosts: { [key: string]: dnsmasq.DhcpHosts } = {};
+          dhcpHosts: { [key: string]: dnsmasq.DhcpHosts } = {},
+          freeRadiusDevices: { [key: string]: freeRadius.Device } = {};
 
     return new Promise((resolve, reject) => {
       this.customObjectsClient.listNamespacedCustomObject(
@@ -177,6 +181,17 @@ export default class DeviceBasedHosts extends Operator {
 
                 dhcpHosts[network].spec.hosts.push(host);
               }
+
+              if (config.EnableFreeRadiusDevices && (!config.FreeRadiusDevicesWirelessOnly || device.spec.wireless))
+              {
+                logger.trace({ device }, 'Creating FreeRADIUS device');
+
+                const freeRadiusDevice = new freeRadius.Device(device.metadata.name);
+                freeRadiusDevice.spec.macAddresses = device.spec.macAddresses;
+                freeRadiusDevice.spec.vlan = mappedNetworks[network].spec.vlan;
+              
+                freeRadiusDevices[device.metadata.name] = freeRadiusDevice;
+              }
             }
             else
             {
@@ -189,6 +204,13 @@ export default class DeviceBasedHosts extends Operator {
           dhcpHosts: dhcpHosts,
           dnsHosts: dnsHosts
         }, 'Generated device based DhcpHosts and DnsHosts; updating matching resources');
+
+        if (config.EnableFreeRadiusDevices)
+        {
+          logger.info({
+            devices: freeRadiusDevices,
+          }, 'Generated device based FreeRADIUS devices; updating matching resources');
+        }
 
         Promise.all(
           Object.values(dhcpHosts).map(
@@ -224,6 +246,23 @@ export default class DeviceBasedHosts extends Operator {
                 dnsHosts: dnsHosts,
                 error: err
               }, 'Failed to update DnsHosts custom resource');
+            })
+          )).concat(Object.values(freeRadiusDevices).map(
+            freeRadiusDevice => KubeHelpers.upsertNamespacedCustomResource<freeRadius.Device>(
+              this.customObjectsClient,
+              this.crds.freeRadiusDevice,
+              config.FreeRadiusDevicesNamespace,
+              freeRadiusDevice
+            ).then((response) => {
+              logger.debug({
+                freeRadiusDevices: freeRadiusDevices,
+                response: response
+              }, 'Successfully updated FreeRADIUS devices custom resource');
+            }).catch((err) => {
+              logger.error({
+                freeRadiusDevices: freeRadiusDevices,
+                error: err
+              }, 'Failed to update FreeRADIUS devices custom resource');
             })
           ))
         ).then((response) => {
