@@ -3,6 +3,7 @@ export default {
   DryRun: process.env.DRY_RUN ? !(process.env.DRY_RUN === 'false' || process.env.DRY_RUN === '0') : false,
 
   DnsmasqResourcesNamespace: process.env.DNSMASQ_RESOURCES_NAMESPACE ?? 'default',
+  DnsmasqDnsServer: process.env.DNSMASQ_DNS_SERVER,
   DnsmasqDomainName: process.env.DNSMASQ_DOMAIN_NAME,
   DnsmasqDomainSearch: process.env.DNSMASQ_DOMAIN_SEARCH ? process.env.DNSMASQ_DOMAIN_SEARCH.split(',') : null,
 

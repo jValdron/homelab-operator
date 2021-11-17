@@ -300,6 +300,11 @@ export default class DeviceBasedHosts extends Operator {
     dhcpOptions.spec = new dnsmasq.DhcpOptionsSpec();
     dhcpOptions.spec.options = [];
 
+    if (config.DnsmasqDnsServer)
+    {
+      dhcpOptions.spec.options.push(new dnsmasq.DhcpOptionsSpecDhcpOption('option:dns-server', [config.DnsmasqDnsServer]));
+    }
+
     if (config.DnsmasqDomainName)
     {
       dhcpOptions.spec.options.push(new dnsmasq.DhcpOptionsSpecDhcpOption('option:domain-name', [config.DnsmasqDomainName]));
