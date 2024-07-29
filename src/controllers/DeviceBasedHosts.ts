@@ -326,11 +326,11 @@ export default class DeviceBasedHosts extends Operator {
 
             if (network.spec.dnsServer)
             {
-              dhcpOptions.spec.options.push(new dnsmasq.DhcpOptionsSpecDhcpOption('option:dns-server', [network.spec.dnsServer]));
+              dhcpOptions.spec.options.push(new dnsmasq.DhcpOptionsSpecDhcpOption('option:dns-server', [network.spec.dnsServer], network.metadata.name));
             }
             else if (config.DnsmasqDnsServer)
             {
-              dhcpOptions.spec.options.push(new dnsmasq.DhcpOptionsSpecDhcpOption('option:dns-server', [config.DnsmasqDnsServer]));
+              dhcpOptions.spec.options.push(new dnsmasq.DhcpOptionsSpecDhcpOption('option:dns-server', [config.DnsmasqDnsServer], network.metadata.name));
             }
 
           dhcpOptions.spec.options.push(new dnsmasq.DhcpOptionsSpecDhcpOption('option:router', [network.spec.router], network.metadata.name));
