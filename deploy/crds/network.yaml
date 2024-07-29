@@ -25,6 +25,8 @@ spec:
                   type: boolean
                 router:
                   type: string
+                dnsServer:
+                  type: string
               required:
                 - vlan
                 - cidrBlock

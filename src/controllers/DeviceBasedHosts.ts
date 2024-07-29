@@ -121,22 +121,22 @@ export default class DeviceBasedHosts extends Operator {
                     device: device,
                     network: network
                   }, 'Missing DnsHost resource for network');
-  
+
                   dnsHosts[network] = new dnsmasq.DnsHosts(`device-based-${network}`);
                   dnsHosts[network].spec = new dnsmasq.DnsHostsSpec();
                   dnsHosts[network].spec.hosts = [];
                 }
-  
+
                 const host = new dnsmasq.DnsHostsSpecHost();
                 host.ip = device.spec.ip;
                 host.hostnames = [];
-                
+
                 const addHostnames = hostname => {
                   if (config.EnableDeviceShortName)
                   {
                     host.hostnames.push(hostname);
                   }
-  
+
                   if (config.DeviceSuffix)
                   {
                     host.hostnames.push(`${hostname}${config.DeviceSuffix}`);
@@ -149,7 +149,7 @@ export default class DeviceBasedHosts extends Operator {
                 {
                   device.spec.additionalHostnames.forEach(addHostnames);
                 }
-                
+
                 dnsHosts[network].spec.hosts.push(host);
               }
               else
@@ -167,12 +167,12 @@ export default class DeviceBasedHosts extends Operator {
                     device: device,
                     network: network
                   }, 'Missing DhcpHost resource for network');
-  
+
                   dhcpHosts[network] = new dnsmasq.DhcpHosts(`device-based-${network}`);
                   dhcpHosts[network].spec = new dnsmasq.DhcpHostsSpec();
                   dhcpHosts[network].spec.hosts = [];
                 }
-  
+
                 const host = new dnsmasq.DhcpHostsSpecHost();
                 host.hostname = device.metadata.name;
                 host.ip = device.spec.ip;
@@ -189,7 +189,7 @@ export default class DeviceBasedHosts extends Operator {
                 const freeRadiusDevice = new freeRadius.Device(device.metadata.name);
                 freeRadiusDevice.spec.macAddresses = device.spec.macAddresses;
                 freeRadiusDevice.spec.vlan = mappedNetworks[network].spec.vlan;
-              
+
                 freeRadiusDevices[device.metadata.name] = freeRadiusDevice;
               }
             }
@@ -283,7 +283,7 @@ export default class DeviceBasedHosts extends Operator {
           return reject(err);
         });
       }).catch((err) => {
-        logger.error({ 
+        logger.error({
           crd: this.crds.device,
           namespace: namespace,
           error: err
@@ -299,11 +299,6 @@ export default class DeviceBasedHosts extends Operator {
     const dhcpOptions = new dnsmasq.DhcpOptions('device-based-hosts');
     dhcpOptions.spec = new dnsmasq.DhcpOptionsSpec();
     dhcpOptions.spec.options = [];
-
-    if (config.DnsmasqDnsServer)
-    {
-      dhcpOptions.spec.options.push(new dnsmasq.DhcpOptionsSpecDhcpOption('option:dns-server', [config.DnsmasqDnsServer]));
-    }
 
     if (config.DnsmasqDomainName)
     {
@@ -328,6 +323,15 @@ export default class DeviceBasedHosts extends Operator {
 
         networks.forEach((network) => {
           logger.trace({ network }, 'Found network');
+
+            if (network.spec.dnsServer)
+            {
+              dhcpOptions.spec.options.push(new dnsmasq.DhcpOptionsSpecDhcpOption('option:dns-server', [network.spec.dnsServer]));
+            }
+            else if (config.DnsmasqDnsServer)
+            {
+              dhcpOptions.spec.options.push(new dnsmasq.DhcpOptionsSpecDhcpOption('option:dns-server', [config.DnsmasqDnsServer]));
+            }
 
           dhcpOptions.spec.options.push(new dnsmasq.DhcpOptionsSpecDhcpOption('option:router', [network.spec.router], network.metadata.name));
         });
@@ -355,7 +359,7 @@ export default class DeviceBasedHosts extends Operator {
           return reject(err);
         });
       }).catch((err) => {
-        logger.error({ 
+        logger.error({
           crd: this.crds.network,
           namespace: namespace,
           error: err

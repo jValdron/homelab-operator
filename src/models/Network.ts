@@ -8,6 +8,7 @@ export class NetworkSpec {
 
   serveDhcp: boolean = false;
   router?: string;
+  dnsServer?: string;
 }
 
 export class NetworkStatus {
