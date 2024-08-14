@@ -77,8 +77,9 @@ export default class LoadBalancerBasedDnsHosts extends Operator {
           let loadBalancerIP = service.spec.loadBalancerIP,
               dnsHost = hostsByIp[loadBalancerIP];
 
-          if (service.status.length && service.status[0].loadBalancer && service.status[0].loadBalancer.ingress.length && service.status[0].loadBalancer.ingress[0].ip) {
-            loadBalancerIP = service.status[0].loadBalancer.ingress[0].ip;
+          if (service.status && service.status.loadBalancer && service.status.loadBalancer.ingress.length && service.status.loadBalancer.ingress[0].ip) {
+            logger.info({ loadBalancer: service.status.loadBalancer }, 'Found load balancer status property');
+            loadBalancerIP = service.status.loadBalancer.ingress[0].ip;
           }
 
           if (!hostsByIp[loadBalancerIP])
