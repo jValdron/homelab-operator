@@ -9,6 +9,7 @@ import { KubeHelpers } from '../utils/KubeHelpers';
 
 import { IngressRouter } from '../models/IngressRouter';
 import * as dnsmasq from '../models/Dnsmasq';
+import * as gatewayApi from '../models/GatewayApi';
 
 export default class IngressBasedDnsHosts extends Operator {
   private customObjectsClient: k8s.CustomObjectsApi;
@@ -165,7 +166,7 @@ export default class IngressBasedDnsHosts extends Operator {
           this.crds.httpRoute.plural
         );
 
-        httpRoutes.body.items.forEach((httpRoute) => {
+        (<gatewayApi.HttpRouteList>httpRoutes.body).items.forEach((httpRoute) => {
           logger.trace({ httpRoute }, 'Found HTTP route');
 
           const gateway = httpRoute.parentRefs[0].name;
