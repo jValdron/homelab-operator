@@ -15,6 +15,7 @@ export default {
   FreeRadiusDevicesWirelessOnly: process.env.FREERADIUS_DEVICES_WIRELESS_ONLY ? !(process.env.FREERADIUS_DEVICES_WIRELESS_ONLY === 'false' || process.env.FREERADIUS_DEVICES_WIRELESS_ONLY === '0') : true,
 
   EnableIngressBasedDnsHosts: process.env.ENABLE_INGRESS_BASED_DNS_HOSTS ? !(process.env.ENABLE_INGRESS_BASED_DNS_HOSTS === 'false' || process.env.ENABLE_INGRESS_BASED_DNS_HOSTS === '0') : true,
+  UseHttpRoutesForIngress:  process.env.USE_HTTP_ROUTES_FOR_INGRESS ? !(process.env.USE_HTTP_ROUTES_FOR_INGRESS === 'false' || process.env.USE_HTTP_ROUTES_FOR_INGRESS === '0') : true,
 
   EnableLoadBalancerBasedDnsHosts: process.env.ENABLE_LOAD_BALANCER_BASED_DNS_HOSTS ? !(process.env.ENABLE_LOAD_BALANCER_BASED_DNS_HOSTS === 'false' || process.env.ENABLE_LOAD_BALANCER_BASED_DNS_HOSTS === '0') : true,
   LoadBalancerBasedSuffix: process.env.LOAD_BALANCER_BASED_SUFFIX ?? '',
