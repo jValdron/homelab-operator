@@ -169,7 +169,7 @@ export default class IngressBasedDnsHosts extends Operator {
         (<gatewayApi.HttpRouteList>httpRoutes.body).items.forEach((httpRoute) => {
           logger.trace({ httpRoute }, 'Found HTTP route');
 
-          const gateway = httpRoute.parentRefs[0].name;
+          const gateway = httpRoute.spec.parentRefs[0].name;
           const matchingIngressRouters = Object.values(this.ingressRouters).filter((ir) => {
             return ir.spec.ingressClass == gateway;
           });
@@ -191,7 +191,7 @@ export default class IngressBasedDnsHosts extends Operator {
                 dnsHost: dnsHost
               }, 'Adding HTTP route hostname to DNS host');
 
-              dnsHost.hostnames.push(httpRoute);
+              dnsHost.hostnames.push(hostname);
             });
           }
           else
