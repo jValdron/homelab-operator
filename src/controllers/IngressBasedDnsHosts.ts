@@ -43,7 +43,7 @@ export default class IngressBasedDnsHosts extends Operator {
 
     this.crds = {
       dnsHost: await this.registerCustomResourceDefinition(Path.resolve(crdsBasePath, 'dnsmasq', 'dns-hosts.yaml')),
-      httpRoute: await this.registerCustomResourceDefinition(Path.resolve(crdsBasePath, 'gatway-api', 'http-routes.yaml')),
+      httpRoute: await this.registerCustomResourceDefinition(Path.resolve(crdsBasePath, 'gataway-api', 'http-routes.yaml')),
       ingressRouter: await this.registerCustomResourceDefinition(Path.resolve(crdsBasePath, 'ingress-router.yaml')),
     };
 
