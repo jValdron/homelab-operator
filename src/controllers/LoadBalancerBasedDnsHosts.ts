@@ -73,15 +73,20 @@ export default class LoadBalancerBasedDnsHosts extends Operator {
           return service.spec.type === 'LoadBalancer';
         }).forEach((service) => {
           logger.trace({ service }, 'Found service');
-          
-          let dnsHost = hostsByIp[service.spec.loadBalancerIP];
 
-          if (!hostsByIp[service.spec.loadBalancerIP])
+          let loadBalancerIP = service.spec.loadBalancerIP,
+              dnsHost = hostsByIp[loadBalancerIP];
+
+          if (service.status.length && service.status[0].loadBalancer && service.status[0].loadBalancer.ingress.length && service.status[0].loadBalancer.ingress[0].ip) {
+            loadBalancerIP = service.status[0].loadBalancer.ingress[0].ip;
+          }
+
+          if (!hostsByIp[loadBalancerIP])
           {
             dnsHost = new dnsmasq.DnsHostsSpecHost();
-            dnsHost.ip = service.spec.loadBalancerIP;
+            dnsHost.ip = loadBalancerIP;
             dnsHost.hostnames = [];
-            hostsByIp[service.spec.loadBalancerIP] = dnsHost;
+            hostsByIp[loadBalancerIP] = dnsHost;
             dnsHosts.spec.hosts.push(dnsHost);
           }
 
