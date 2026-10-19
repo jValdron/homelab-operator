@@ -1,0 +1,8 @@
+apiVersion: homelab.valdron.ca/v1
+kind: IngressRouter
+metadata:
+  name: internal
+  namespace: default
+spec:
+  ingressClass: internal
+  ipAddress: 10.1.0.10

@@ -1,10 +1,12 @@
-FROM node:18-alpine
-
-WORKDIR /app
-COPY package.json .
-
-RUN npm install
+FROM golang:1.27-bookworm AS builder
+WORKDIR /workspace
+COPY go.mod go.sum ./
+RUN go mod download
 COPY . .
-RUN ./node_modules/.bin/tsc
+RUN CGO_ENABLED=0 GOOS=linux go build -a -o manager cmd/main.go
 
-CMD ["node", "./dist/app.js"]
+FROM gcr.io/distroless/static:nonroot
+WORKDIR /
+COPY --from=builder /workspace/manager .
+USER 65532:65532
+ENTRYPOINT ["/manager"]

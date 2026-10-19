@@ -1,0 +1,13 @@
+apiVersion: homelab.valdron.ca/v1
+kind: Device
+metadata:
+  name: jpc0
+  namespace: default
+spec:
+  network: devices
+  ip: 10.1.30.2
+  macAddresses:
+    - 48:4d:7e:de:19:8f
+  dhcp: true
+  wired: true
+  wireless: false

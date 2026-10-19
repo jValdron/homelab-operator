@@ -1,0 +1,9 @@
+resources:
+- manager.yaml
+
+# Default published image (GHCR). Override locally via skaffold or:
+# kustomize edit set image controller=ghcr.io/jvaldron/homelab-operator:<tag>
+images:
+- name: controller
+  newName: ghcr.io/jvaldron/homelab-operator
+  newTag: latest

@@ -1,0 +1,41 @@
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
+  name: homelab-operator
+
+build:
+  local:
+    push: false
+  artifacts:
+    # Must match config/manager kustomize image newName (after kustomize build).
+    - image: ghcr.io/jvaldron/homelab-operator
+      docker:
+        dockerfile: Dockerfile
+
+manifests:
+  kustomize:
+    paths:
+      - config/overlays/kind
+
+profiles:
+  - name: dev
+    build:
+      local:
+        push: false
+    manifests:
+      kustomize:
+        paths:
+          - config/overlays/kind
+  - name: e2e
+    manifests:
+      kustomize:
+        paths:
+          - config/overlays/e2e
+  - name: ci
+    build:
+      local:
+        push: false
+    manifests:
+      kustomize:
+        paths:
+          - config/overlays/e2e

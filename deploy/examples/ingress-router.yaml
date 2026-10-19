@@ -1,8 +1,0 @@
----
-apiVersion: homelab.valdron.ca/v1
-kind: IngressRouter
-metadata:
-  name: external
-spec:
-  ingressClass: external
-  ipAddress: 10.1.21.2

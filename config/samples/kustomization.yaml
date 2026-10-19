@@ -1,0 +1,6 @@
+## Append samples of your project ##
+resources:
+- homelab_v1_device.yaml
+- homelab_v1_network.yaml
+- homelab_v1_ingressrouter.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples

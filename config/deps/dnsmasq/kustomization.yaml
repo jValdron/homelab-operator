@@ -1,0 +1,7 @@
+# CRDs from dnsmasq-controller (DhcpHosts, DhcpOptions, DnsHosts, DnsmasqOptions).
+# https://github.com/jValdron/dnsmasq-controller/tree/master/config/crd/bases
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - github.com/jValdron/dnsmasq-controller/config/crd/bases?ref=master

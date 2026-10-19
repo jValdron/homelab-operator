@@ -1,159 +1,102 @@
 # homelab-operator
-Provides a way to track devices and networks within a homelab as Kubernetes resources.
 
-Automatically uses devices, ingresses and services (LoadBalancers) to create DNS and DHCP resources to be used by [dnsmasq-controller](https://github.com/kvaps/dnsmasq-controller).
+Kubernetes operator that tracks homelab **Devices** and **Networks**, and keeps [dnsmasq-controller](https://github.com/kvaps/dnsmasq-controller) (and optionally [freeradius-operator](https://github.com/jvaldron/freeradius-operator)) configuration in sync.
 
-Complete setup provides DHCP, DNS and RADIUS authentication ([freeradius-operator](https://github.com/jvaldron/freeradius-operator)) to a homelab environment.
+It also builds cluster-wide DNS entries from **Ingresses** / **IngressRouters** (and optional Gateway API **HTTPRoutes**) and from **LoadBalancer** Services.
 
 ## Notice
-This comes as-is, with no support or no warranties.
+
+This comes as-is, with no support and no warranties.
 
 ## Background
-I was tired of managing my devices through an Excel spreadsheet, just to have my various configuration being managed separately, and end up with drifts. After experimenting with [dnsmasq-controller](https://github.com/kvaps/dnsmasq-controller), and I needed RADIUS authentication configured for my devices too, I figured why not build a small operator to create the configuration I need and a way to track everything through code/custom resources.
 
-## Options
-Available options via environment variables (or dotenv):
-* `LOG_LEVEL`: Optional, overrides the log level: ['trace', 'debug', 'info', 'warn', 'error']
-* `DRY_RUN`: Whether or not to enable dry run mode, won't create any `dnsmasq` related resources.
+This is a controller I originally wrote for my own homelab (Node.js / TypeScript) to stop managing devices in spreadsheets while wiring DHCP, DNS, and optional RADIUS through Kubernetes. That version ran in production here for a long time, but it had rough edges—watch handling, API churn, missing leader election, and age-related dependency issues.
 
-* `DNSMASQ_RESOURCES_NAMESPACE`: Namespace to create the dnsmasq resources within.
-* `DNSMASQ_DOMAIN_NAME`: Adds a `domain-name` option under the created `DhcpOptions` resources.
-* `DNSMASQ_DOMAIN_SEARCH`: Adds a `domain-seach` option under the created `DhcpOptions` resources, with one or more values.
+The codebase was **rewritten in Go** (kubebuilder / controller-runtime) with **AI assistance**, keeping the same general behavior and `homelab.valdron.ca/v1` resources where possible. Treat it as a fresh implementation: review before you rely on it outside a lab.
 
-* `ENABLE_DEVICE_BASED_HOSTS`: Whether or not to enable the _Devies based hosts_ controller (see Controllers).
-* `ENABLE_DEVICE_SHORT_NAME`: Whether to enable the short name form of hostnames on the generated `DnsHosts` resources. Short name is simply the name of the device.
-* `DEVICE_SUFFIX`: Optional, if provided, creates another hostname under `DnsHosts` resources using the device name and appending the given suffix.
-* `ENABLE_FREERADIUS_DEVICES`: Whether or not to enable the creation of FreeRADIUS devices.
-* `FREERADIUS_DEVICES_NAMESPACE`: Namespace to create the FreeRADIUS resources within.
+## Requirements
 
-* `ENABLE_INGRESS_BASED_DNS_HOSTS`: Whether or not to enable the _Ingress based DNS hosts_ controller (see Controllers).
+- Go 1.27+
+- Kubernetes cluster with homelab CRDs installed (`make install`)
+- dnsmasq-controller CRDs already present in the cluster (kind/e2e installs them from [config/deps](config/deps))
 
-* `ENABLE_LOAD_BALANCER_BASED_DNS_HOSTS`: Whether or not to enable the _Load balancer based DNS hosts_ controller (see Controllers).
-* `LOAD_BALANCER_BASED_SUFFIX`: Optionally, a suffix to add to the DNS hosts created as part of the load balancer based DNS hosts.
+## Configuration
 
-## Controllers
-### Devices based hosts
-The devices based hosts is the main controller which watches over `Devices` and `Networks` resources in order to create matching `DhcpOptions`, `DhcpHosts` and `DnsHosts`.
+Each setting can be set with an environment variable (typical in the manager Deployment) or a command-line flag (typical for `make run` / `bin/manager`). Flags default from env when present.
 
-There will be one `DhcpHosts` and `DnsHosts` resource created per each `Networks` resource you create. Additionally, there will be a single `DhcpOptions` resource created: `dhcpoptions/device-based-hosts`
-
-In order to generate `DhcpOptions` and `DhcpHosts`, you must create a `Networks` resource (with `serveDhcp`):
-```
-apiVersion: homelab.valdron.ca/v1
-kind: Network
-metadata:
-  name: my-devices
-spec:
-  serveDhcp: true
-  router: 10.1.0.1
-```
-_More options are available for `Networks`, see Resources._
-
-This will create a matching `router` option under the `dhcpoptions/device-based-hosts` resource for the given device.
-
-Simply need to create a device resource and a matching section under the given network's `DnsHosts` and `DhcpHosts` resource:
-```
-apiVersion: homelab.valdron.ca/v1
-kind: Device
-metadata:
-  name: my-device
-spec:
-  network: my-devices
-  ip: 10.1.0.4
-  macAddresses:
-    - 48:4d:7e:de:19:8f
-  dhcp: true
-```
-
-### Ingress based DNS hosts
-The Ingress based DNS hosts watches over all ingresses across all namespaces and adds a DNS host resource for their respective hostnames.
-
-The generated resource will end up being: `dnshosts/ingress-based`
-
-You must first create an `IngressRouter` resource for the ingress classes you wish to create host entries for:
-```
-apiVersion: homelab.valdron.ca/v1
-kind: IngressRouter
-metadata:
-  name: internal
-spec:
-  ingressClass: internal
-  canonicalName: router-internal.valdron.ca
-```
-
-This will create a host entry, under the `dnshosts/ingress-based` resource, for each ingresses with the `internal` ingress class.
-
-### Load balancer based DNS hosts
-Similar to the inress based DNS hosts but with with services with the `LoadBalancer` type.
-
-The Ingress based DNS hosts watches over all services across all namespaces, with the `LoadBalancer` type, and adds a DNS host resource for their respective hostnames.
-
-The generated resource will end up being: `dnshosts/load-balancer-based`
-
-Optionally, you can specify `LOAD_BALANCER_BASED_SUFFIX` to add a suffix to all host entries that will be created.
+| Environment | CLI flag | Default | Description |
+|-------------|----------|---------|-------------|
+| `DRY_RUN` | `--dry-run` | false | Run reconcilers (list/compute) but skip all API writes (dnsmasq, FreeRADIUS, status, prune) |
+| `DNSMASQ_RESOURCES_NAMESPACE` | `--dnsmasq-resources-namespace` | `default` | Namespace for dnsmasq CRs |
+| `DNSMASQ_DNS_SERVER` | `--dnsmasq-dns-server` | — | Default DHCP DNS server option |
+| `DNSMASQ_DOMAIN_NAME` | `--dnsmasq-domain-name` | — | DHCP domain-name option |
+| `DNSMASQ_DOMAIN_SEARCH` | `--dnsmasq-domain-search` | — | Comma-separated domain-search values; if unset, derived from domain-name plus load-balancer and device suffixes when those are set |
+| `ENABLE_DEVICE_BASED_HOSTS` | `--enable-device-based-hosts` | true | Device/Network → dnsmasq controller |
+| `ENABLE_DEVICE_SHORT_NAME` | `--enable-device-short-name` | true | Use device name as DNS hostname |
+| `DEVICE_SUFFIX` | `--device-suffix` | — | Extra hostname suffix per device |
+| `ENABLE_FREERADIUS_DEVICES` | `--enable-freeradius-devices` | false | Sync FreeRADIUS Device CRs |
+| `FREERADIUS_DEVICES_NAMESPACE` | `--freeradius-devices-namespace` | dnsmasq NS | Target namespace for FreeRADIUS devices |
+| `FREERADIUS_DEVICES_WIRELESS_ONLY` | `--freeradius-devices-wireless-only` | true | Only wireless devices for FreeRADIUS |
+| `ENABLE_INGRESS_BASED_DNS_HOSTS` | `--enable-ingress-based-dns-hosts` | true | Ingress → `dnshosts/ingress-based` |
+| `USE_HTTP_ROUTES_FOR_INGRESS` | `--use-http-routes-for-ingress` | true | Include Gateway API HTTPRoutes |
+| `ENABLE_LOAD_BALANCER_BASED_DNS_HOSTS` | `--enable-load-balancer-based-dns-hosts` | true | LB Services → `dnshosts/load-balancer-based` |
+| `LOAD_BALANCER_BASED_SUFFIX` | `--load-balancer-based-suffix` | — | Suffix on LB DNS names |
+| `HOMELAB_WATCH_NAMESPACES` | `--homelab-watch-namespaces` | — | Comma-separated; empty = all namespaces |
 
 ## Resources
-### Devices
-```
-apiVersion: homelab.valdron.ca/v1
-kind: Device
-metadata:
-  name: jpc0
-spec:
-  network: devices
-  ip: 10.1.30.2
-  macAddresses:
-    - 48:4d:7e:de:19:8f
-  dhcp: true
 
-  additionalHostnames:
-    - jason-pc0
-    - my-other-hostname
+### Device / Network / IngressRouter
 
-  trunked: false
-  wired: true
-  wireless: false
-  usb: false 
+API group: `homelab.valdron.ca/v1`. See [config/samples](config/samples/) for examples.
 
-  location: Rack
-  position: 16
-  pdu: '1/3'
-  switch: '1/1/7'
-  side: Front
+**IngressRouter** uses `spec.ipAddress` (DNS target for that ingress class) and `spec.ingressClass`.
 
-  manufacturer: Dell
-  model: Precision T5810
-  serialNumber: 6CGHXG2
+Status includes `Ready`, `NetworkAvailable` (devices), `lastSyncTime`, and `observedGeneration`.
+
+### Generated dnsmasq objects
+
+| Source | dnsmasq resources |
+|--------|-------------------|
+| Devices/Networks | `dhcpoptions/device-based-hosts`, `device-based-<network>` DhcpHosts/DnsHosts |
+| Ingresses | `dnshosts/ingress-based` |
+| LoadBalancer Services | `dnshosts/load-balancer-based` |
+
+## Development
+
+```bash
+make install          # homelab CRDs into current cluster
+make run              # local controller (uses --leader-election-namespace=homelab-operator-system)
+                      # override: make run LEADER_ELECTION_NAMESPACE=other; or --leader-elect=false
+make test             # unit + envtest
+make docker-build IMG=controller:dev
 ```
 
-### Network
-```
-apiVersion: homelab.valdron.ca/v1
-kind: Network
-metadata:
-  name: devices
-spec:
-  role: Devices
+### Kind + Skaffold
 
-  vlan: 2030
-  cidrBlock: 10.1.30.0/24
+Requires [kind](https://kind.sigs.k8s.io/) and [skaffold](https://skaffold.dev/).
 
-  serveDhcp: true
-  router: 10.1.30.1
+```bash
+make skaffold-dev      # kind cluster + skaffold dev -p dev
+make test-e2e          # skaffold run -p e2e + test/e2e/verify.sh
+make cleanup-kind      # delete kind cluster (optional)
 ```
 
-### Ingress Router
-```
-apiVersion: homelab.valdron.ca/v1
-kind: IngressRouter
-metadata:
-  name: internal
-spec:
-  ingressClass: internal
-  canonicalName: router-internal.valdron.ca
+Local kind/e2e dependencies under [config/deps](config/deps): [dnsmasq-controller](https://github.com/jValdron/dnsmasq-controller) CRDs, FreeRADIUS device CRD, and [Gateway API](https://gateway-api.sigs.k8s.io/) Standard Channel CRDs (remote kustomize bases; network required at deploy time).
+
+## Deploy
+
+Published images: `ghcr.io/jvaldron/homelab-operator:latest` (and version tags on git releases).
+
+```bash
+kubectl apply -k config/default
 ```
 
-## TODO
-* `ownerRef` implementation to reconcile when owned resources are modified
-* Cleanup on delete
-* Add leader election
+Image reference is set in [config/manager/kustomization.yaml](config/manager/kustomization.yaml). For a private fork, change `newName` / `newTag` or run:
+
+```bash
+cd config/manager && kustomize edit set image controller=ghcr.io/<owner>/homelab-operator:<tag>
+```
+
+## License
+
+MIT — see [LICENSE](LICENSE).
