@@ -10,9 +10,7 @@ This comes as-is, with no support and no warranties.
 
 ## Background
 
-This is a controller I originally wrote for my own homelab (Node.js / TypeScript) to stop managing devices in spreadsheets while wiring DHCP, DNS, and optional RADIUS through Kubernetes. That version ran in production here for a long time, but it had rough edges—watch handling, API churn, missing leader election, and age-related dependency issues.
-
-The codebase was **rewritten in Go** (kubebuilder / controller-runtime) with **AI assistance**, keeping the same general behavior and `homelab.valdron.ca/v1` resources where possible. Treat it as a fresh implementation: review before you rely on it outside a lab.
+Built for my homelab, not as a product. The first version was Node/TypeScript: Devices and Networks in the cluster instead of spreadsheets, dnsmasq CRs for DHCP/DNS, optional FreeRADIUS sync. It worked here for a long time; the Go rewrite (kubebuilder / controller-runtime) is the same idea with cleaner watches, leader election, and fewer creaky dependencies. Same `homelab.valdron.ca/v1` CRs for the most part. I used AI heavily on the port, expect rough edges.
 
 ## Requirements
 
